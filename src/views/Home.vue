@@ -137,7 +137,7 @@
           <div class="mt-10 font-bold text-green-900 text-3xl">ISP 資訊</div>
     
           <div class="mt-5 text-lg font-bold text-green-900">ASN</div>
-          <div class="text-2xl font-bold text-red-800">{{ resultInfo.longitude }}</div>
+          <div class="text-2xl font-bold text-red-800">{{ resultInfo.asn }}</div>
 
           <div class="mt-5 text-lg font-bold text-green-900">ORG</div>
           <div class="text-2xl font-bold text-red-800">{{ resultInfo.org }}</div>
@@ -214,40 +214,17 @@ export default {
         this.cacheString = searchString
         this.loading = true
 
-        axios.get(`http://ipwhois.app/json/${searchString}?lang=en`)
-        .then((res) => {
-          this.resultInfo = res.data
-          this.$router.push({path:'/',
-            query: {
-              ip: this.cacheString
-            }
-          })
-
-          this.loading = false
-        })
-        .catch(() => {
-          this.error = true
+        this.requestQuery(searchString)
+        this.$router.push({path:'/',
+          query: {
+            ip: this.cacheString
+          }
         })
       }
-    }
-  },
+    },
 
-  mounted() {
-    let urlQueryIps = this.$route.query.ip
-
-    if(urlQueryIps !== undefined && urlQueryIps.length !==0) {
-      axios.get(`http://ipwhois.app/json/${urlQueryIps}`)
-      .then((res) => {
-        this.resultInfo = res.data
-        this.cacheString = res.data.ip
-
-        this.loading = false
-      })
-      .catch(() => {
-        this.error = true
-      })
-    } else {
-      axios.get(`http://ipwhois.app/json/`)
+    async requestQuery(host) {
+      axios.get(`https://ipwhois.app/json/${host}`)
       .then((res) => {
         this.resultInfo = res.data
         this.cacheString = res.data.ip
@@ -262,6 +239,21 @@ export default {
       })
       .catch(() => {
         this.error = true
+      })
+    }
+  },
+
+  async mounted() {
+    let urlQueryIps = this.$route.query.ip
+    if(urlQueryIps === undefined) { urlQueryIps = ''}
+
+    await this.requestQuery(urlQueryIps)
+
+    if(urlQueryIps.length ===0) {
+      this.$router.push({path:'/',
+        query: {
+          ip: this.cacheString
+        }
       })
     }
 
